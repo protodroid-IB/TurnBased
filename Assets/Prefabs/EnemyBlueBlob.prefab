@@ -101,7 +101,7 @@ Transform:
   m_GameObject: {fileID: 1638611082780674}
   m_LocalRotation: {x: 0.3420201, y: 0, z: 0, w: 0.9396927}
   m_LocalPosition: {x: 0, y: 0.014, z: 0}
-  m_LocalScale: {x: 6, y: 6, z: 6}
+  m_LocalScale: {x: 4.5, y: 4.5, z: 6}
   m_Children: []
   m_Father: {fileID: 4685464633847248}
   m_RootOrder: 0
@@ -155,7 +155,7 @@ Transform:
   m_GameObject: {fileID: 1385391411486562}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.6, z: 0}
-  m_LocalScale: {x: 0.75, y: 0.75, z: 0.75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4685464633847248}
   - {fileID: 4777698999453478}
@@ -211,6 +211,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 153f3c926044f954fb9d65a6a9c7e755, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enemyType: 0
   level: 2
   maxHealth: 100
 --- !u!135 &135067298309654228
@@ -223,7 +224,7 @@ SphereCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 7
+  m_Radius: 5
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!135 &135229312331936920
 SphereCollider:
@@ -235,7 +236,7 @@ SphereCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 10
+  m_Radius: 7.5
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!195 &195570279334357842
 NavMeshAgent:
@@ -247,7 +248,7 @@ NavMeshAgent:
   m_AgentTypeID: 0
   m_Radius: 0.7
   m_Speed: 1.2
-  m_Acceleration: 100
+  m_Acceleration: 50
   avoidancePriority: 50
   m_AngularSpeed: 0
   m_StoppingDistance: 0
@@ -257,7 +258,7 @@ NavMeshAgent:
   m_Height: 1
   m_BaseOffset: 0.5
   m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 4
+  m_ObstacleAvoidanceType: 0
 --- !u!212 &212698768161607842
 SpriteRenderer:
   m_ObjectHideFlags: 1

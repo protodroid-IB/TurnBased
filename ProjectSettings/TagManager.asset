@@ -7,6 +7,14 @@ TagManager:
   - SceneFader
   - HierarchyEnemies
   - BattleEnemy
+  - BattlePlayer
+  - PlayerStats
+  - EnemyStats
+  - BattleDialogue
+  - MoveSelection
+  - BattleController
+  - Grass
+  - RandomEnemies
   layers:
   - Default
   - TransparentFX

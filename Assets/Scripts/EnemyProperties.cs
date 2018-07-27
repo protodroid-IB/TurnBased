@@ -1,12 +1,19 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class EnemyProperties
 {
     // MEMBER FIELDS
-    private int indexInList;
+    private int id;
 
-    private EnemyType enemyType;
+    private Sprite sprite;
+
+    private FighterType enemyType;
+
+    private Moves moves;
+
+    private string name;
 
     private bool alive;
 
@@ -16,39 +23,123 @@ public class EnemyProperties
 
     private int currentHealth;
 
+    private int strength, dexterity, intelligence, totalPoints, speed, attack, defense, accuracy, cooldown;
+
+    private int baseStrength, baseDexterity, baseIntelligence;
+
+    private float rateStrength, rateDexterity, rateIntelligence;
+
+    private int experienceNeeded, experienceGained;
+
+    private bool levelUp;
+
 
     // CONSTRUCTORS
-    public EnemyProperties(int inIndex, EnemyType inType, bool inAlive, int inLevel, int inMaxHealth)
+    public EnemyProperties(int inID, FighterType inType, Moves inMoves, Sprite inSprite, string inName, bool inAlive, int inLevel, int inStrength, float inRateStrength, int inDexterity, float inRateDexterity, int inIntelligence, float inRateIntelligence)
     {
-        indexInList = inIndex;
+        id = inID;
         enemyType = inType;
+        moves = inMoves;
+        sprite = inSprite;
+        name = inName;
+
         alive = inAlive;
         level = inLevel;
-        maxHealth = inMaxHealth;
+        levelUp = false;
+
+        baseStrength = inStrength;
+        rateStrength = inRateStrength;
+        strength = MainStatCalc(baseStrength, rateStrength);
+
+        baseDexterity = inDexterity;
+        rateDexterity = inRateDexterity;    
+        dexterity = MainStatCalc(baseDexterity, rateDexterity);
+
+        baseIntelligence = inIntelligence;
+        rateIntelligence = inRateIntelligence;
+        intelligence = MainStatCalc(baseIntelligence, rateIntelligence);
+
+        totalPoints = TotalPointsCalc();
+
+        speed = SpeedCalc();
+        attack = AttackCalc();
+        defense = DefenseCalc();
+        accuracy = AccuracyCalc();
+        cooldown = CooldownCalc();
+
+        maxHealth = HealthCalc();
         currentHealth = maxHealth;
+
+        experienceNeeded = ExperienceNeededCalc();
+        experienceGained = 0;
     }
 
 
     public EnemyProperties(EnemyProperties inEnemy)
     {
-        indexInList = inEnemy.GetIndexInList();
+        id = inEnemy.GetID();
         enemyType = inEnemy.GetEnemyType();
+        moves = inEnemy.GetMoves();
+
+        sprite = inEnemy.GetSprite();
+        name = inEnemy.GetName();
+
         alive = inEnemy.GetAlive();
         level = inEnemy.GetLevel();
+        levelUp = inEnemy.GetLevelUp();
+
+        baseStrength = inEnemy.GetBaseStrength();
+        rateStrength = inEnemy.GetRateStrength();
+        strength = inEnemy.GetStrength();
+
+        baseDexterity = inEnemy.GetBaseDexterity();
+        rateDexterity = inEnemy.GetRateDexterity();
+        dexterity = inEnemy.GetDexterity();
+
+        baseIntelligence = inEnemy.GetBaseIntelligence();
+        rateIntelligence = inEnemy.GetRateIntelligence();
+        intelligence = inEnemy.GetIntelligence();
+
+        totalPoints = inEnemy.GetTotalPoints();
+
+        speed = inEnemy.GetSpeed();
+        attack = inEnemy.GetAttack();
+        defense = inEnemy.GetDefense();
+        accuracy = inEnemy.GetAccuracy();
+        cooldown = inEnemy.GetCooldown();
+
         maxHealth = inEnemy.GetMaxHealth();
         currentHealth = inEnemy.GetCurrentHealth();
+
+        experienceNeeded = inEnemy.GetExperienceNeeded();
+        experienceGained = inEnemy.GetExperienceGained();
     }
 
 
     // GETTERS
-    public int GetIndexInList()
+    public int GetID()
     {
-        return indexInList;
+        return id;
     }
 
-    public EnemyType GetEnemyType()
+    public FighterType GetEnemyType()
     {
         return enemyType;
+    }
+
+    public Moves GetMoves()
+    {
+        return moves;
+    }
+
+    public Sprite GetSprite()
+    {
+        return sprite;
+    }
+
+    public string GetName()
+    {
+        return name;
     }
 
     public bool GetAlive()
@@ -61,6 +152,11 @@ public class EnemyProperties
         return level;
     }
 
+    public bool GetLevelUp()
+    {
+        return levelUp;
+    }
+
     public int GetMaxHealth()
     {
         return maxHealth;
@@ -71,16 +167,101 @@ public class EnemyProperties
         return currentHealth;
     }
 
+    public int GetBaseStrength()
+    {
+        return baseStrength;
+    }
+
+    public int GetBaseDexterity()
+    {
+        return baseDexterity;
+    }
+
+    public int GetBaseIntelligence()
+    {
+        return baseIntelligence;
+    }
+
+    public float GetRateStrength()
+    {
+        return rateStrength;
+    }
+
+    public float GetRateDexterity()
+    {
+        return rateDexterity;
+    }
+
+    public float GetRateIntelligence()
+    {
+        return rateIntelligence;
+    }
+
+    public int GetStrength()
+    {
+        return strength;
+    }
+
+    public int GetDexterity()
+    {
+        return dexterity;
+    }
+
+    public int GetIntelligence()
+    {
+        return intelligence;
+    }
+
+    public int GetTotalPoints()
+    {
+        return totalPoints;
+    }
+
+    public int GetSpeed()
+    {
+        return speed;
+    }
+
+    public int GetAttack()
+    {
+        return attack;
+    }
+
+    public int GetDefense()
+    {
+        return defense;
+    }
+
+    public int GetAccuracy()
+    {
+        return accuracy;
+    }
+
+    public int GetCooldown()
+    {
+        return cooldown;
+    }
+
+    public int GetExperienceNeeded()
+    {
+        return experienceNeeded;
+    }
+
+    public int GetExperienceGained()
+    {
+        return experienceGained;
+    }
+
 
 
 
     // SETTERS
-    public void SetIndexInList(int inNum)
+    public void SetID(int inNum)
     {
-        indexInList = inNum;
+        id = inNum;
     }
 
-    public void SetEnemyType(EnemyType inType)
+    public void SetEnemyType(FighterType inType)
     {
         enemyType = inType;
     }
@@ -95,16 +276,6 @@ public class EnemyProperties
         level = inNum;
     }
 
-    public void SetMaxHealth(int inNum)
-    {
-        maxHealth = inNum;
-    }
-
-    public void SetCurrentHealth(int inNum)
-    {
-        currentHealth = inNum;
-    }
-
 
 
 
@@ -115,24 +286,9 @@ public class EnemyProperties
 
         if(inEnemy != null)
         {
-            if (indexInList == inEnemy.GetIndexInList())
+            if (id == inEnemy.GetID())
             {
-                if (enemyType == inEnemy.GetEnemyType())
-                {
-                    if (level == inEnemy.GetLevel())
-                    {
-                        if (alive == inEnemy.GetAlive())
-                        {
-                            if (maxHealth == inEnemy.GetMaxHealth())
-                            {
-                                if (currentHealth == inEnemy.GetCurrentHealth())
-                                {
-                                    isEqual = true;
-                                }
-                            }
-                        }
-                    }
-                }
+                isEqual = true;
             }
         }
 
@@ -149,8 +305,9 @@ public class EnemyProperties
     {
         string str = "";
 
-        str = "INDEX: " + indexInList + "  ENEMY TYPE: " + enemyType + "  ALIVE: " + alive + "  LEVEL: " + level;
+        str = "ID: " + id + "  ENEMY TYPE: " + enemyType + "  ALIVE: " + alive + "  LEVEL: " + level;
         str += "  HEALTH: " + currentHealth + " / " + maxHealth;
+        str += "  STR: " + strength + "  DEX: " + dexterity + " INT: " + intelligence + "  SPEED: " + speed;
         str += "\n";
 
         return str;
@@ -158,14 +315,169 @@ public class EnemyProperties
 
 
 
-    public void CopyEnemyData(int index, Enemy inEnemy)
+
+
+
+    // CALCULATIONS
+
+
+    private int MainStatCalc(int baseStat, float rate)
     {
-        indexInList = index;
+        float outStat = (float)baseStat + rate * (float)level;
+
+        return (int)outStat;
+    }
+
+
+    private int SpeedCalc()
+    {
+        float outSpeed = ((float)dexterity + (float)intelligence) / 2f + (float)level * ((((float)dexterity + (float)intelligence) / 2f) / (float)totalPoints);
+
+        return (int)outSpeed;
+    }
+
+    private int AttackCalc()
+    {
+        float outAttack = strength + (float)level * (strength / (float)totalPoints);
+
+        return (int)outAttack;
+    }
+
+    private int DefenseCalc()
+    {
+        float outDefense = intelligence + (float)level * (intelligence / (float)totalPoints);
+
+        return (int)outDefense;
+    }
+
+    private int AccuracyCalc()
+    {
+        float outAccuracy = dexterity + (float)level * (dexterity / (float)totalPoints);
+
+        return (int)outAccuracy;
+    }
+
+    private int CooldownCalc()
+    {
+        float outCooldown = ((float)strength + (float)intelligence) / 2f + (float)level * ((((float)strength + (float)intelligence) / 2f) / (float)totalPoints);
+
+        return (int)outCooldown;
+    }
+
+    private int HealthCalc()
+    {
+        int outHealth = speed + attack + defense + accuracy + cooldown;
+
+        return outHealth;
+    }
+
+    private int TotalPointsCalc()
+    {
+        int outTotalPoints = strength + dexterity + intelligence;
+
+        return outTotalPoints;
+    }
+
+    private int ExperienceNeededCalc()
+    {
+        int outExperienceNeeded = totalPoints + level;
+
+        return outExperienceNeeded;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // HELPER FUNCTIONS
+    public void CopyEnemyData(Enemy inEnemy)
+    {
+        id = inEnemy.GetID();
         enemyType = inEnemy.GetEnemyType();
+        moves = inEnemy.GetMoves();
         alive = inEnemy.GetAlive();
-        level = inEnemy.GetLevel();
-        maxHealth = inEnemy.GetMaxHealth();
-        currentHealth = inEnemy.GetCurrentHealth();
+        sprite = inEnemy.GetSprite();
+        name = inEnemy.GetName();
+
+        if(inEnemy.GetLevelUp() == false)
+        {
+            level = inEnemy.GetLevel();
+            baseStrength = inEnemy.GetBaseStrength();
+            rateStrength = inEnemy.GetRateStrength();
+            strength = inEnemy.GetStrength();
+
+            baseDexterity = inEnemy.GetBaseDexterity();
+            rateDexterity = inEnemy.GetRateDexterity();
+            dexterity = inEnemy.GetDexterity();
+
+            baseIntelligence = inEnemy.GetBaseIntelligence();
+            rateIntelligence = inEnemy.GetRateIntelligence();
+            intelligence = inEnemy.GetIntelligence();
+
+            totalPoints = inEnemy.GetTotalPoints();
+
+            speed = inEnemy.GetSpeed();
+            attack = inEnemy.GetAttack();
+            defense = inEnemy.GetDefense();
+            accuracy = inEnemy.GetAccuracy();
+            cooldown = inEnemy.GetCooldown();
+
+            maxHealth = inEnemy.GetMaxHealth();
+            currentHealth = inEnemy.GetCurrentHealth();
+
+            experienceNeeded = inEnemy.GetExperienceNeeded();
+            experienceGained = inEnemy.GetExperienceGained();
+        }
+        else
+        {
+            LevelUp();
+            levelUp = false;
+        }
+        
+    }
+
+
+    public void LevelUp()
+    {
+        level++;
+        
+        strength = MainStatCalc(baseStrength, rateStrength);
+        dexterity = MainStatCalc(baseDexterity, rateDexterity);
+        intelligence = MainStatCalc(baseIntelligence, rateIntelligence);
+
+        totalPoints = strength + dexterity + intelligence;
+
+        speed = SpeedCalc();
+        attack = AttackCalc();
+        defense = DefenseCalc();
+        accuracy = AccuracyCalc();
+        cooldown = CooldownCalc();
+
+        maxHealth = HealthCalc();
+        currentHealth = maxHealth;
+
+        experienceGained = (experienceGained - experienceNeeded);
+        experienceNeeded = ExperienceNeededCalc();
+    }
+
+
+    public void GainExperience(int inExperience)
+    {
+        experienceGained += inExperience;
     }
 
 }

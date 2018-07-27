@@ -27,6 +27,7 @@ public class EnemyOverworld : MonoBehaviour
 
 
 
+
     [Header("IDLE STATE PROPERTIES")]
     [Space(20)]
 
@@ -162,7 +163,7 @@ public class EnemyOverworld : MonoBehaviour
         }
 
 
-	}
+    }
 
 
 
@@ -209,13 +210,16 @@ public class EnemyOverworld : MonoBehaviour
                 float distanceToBounds = idleRangeCollider.radius - DistanceToIdleRangeCenter();
 
                 // find a point for the agent to move to within the range
-                idleMovePoint = Random.insideUnitSphere * distanceToBounds * ((idleRandomDistance) / 100f);
+                idleMovePoint = transform.position + Random.insideUnitSphere * distanceToBounds * ((idleRandomDistance) / 100f);
+
+                idleMovePoint = new Vector3(idleMovePoint.x, 0f, idleMovePoint.z);
 
                 // determines the time until the agent makes the move
                 idleRandomTime = Random.Range(idleMinMoveTime, idleMaxMoveTime);
 
                 // set the timer
                 idleTimer = idleRandomTime;
+
             }
 
             // if the timer is complete

@@ -10,24 +10,48 @@ public class GameController : MonoBehaviour
 
     public static GameState gameState = GameState.Overworld;
 
+    private GameObject playerGO;
+    private Player playerWorld;
+    private GameObject playerBattleGO;
+    private Player playerBattle;
+    private PlayerProperties playerProperties;
+
+    private bool playerPosSet = true;
+    private Vector3 playerLastPosition;
+
+    private int enemyID = 0; 
+
     private GameObject enemiesInHierarchy; // gameobject that all enemies in overworld are children of
     private List<GameObject> enemiesWorldGO = new List<GameObject>(); // list of all enemy gameobjects in overworld
     private List<Enemy> enemiesWorld = new List<Enemy>(); // list of all enemy script instances in overworld
+
+    private BattleController battleController;
 
     private GameObject battleEnemyGO; // enemy gameobject being battled
     private Enemy battleEnemy; // enemy script instance being battled
     private int battleEnemyIndex = 0;
     private bool justBattled = false;
+    private bool battleTriggered = false;
 
     private List<EnemyProperties> enemiesProperties = new List<EnemyProperties>(); // updated persistent list of enemy properties
 
+    private GameObject randomEnemiesInHierarchy;
+    private GameObject[] randomEnemiesGO;
+    private Enemy[] randomEnemies;
+    private EnemyProperties randomEnemyPropeties;
 
+    [SerializeField]
+    private string overworldSceneName, battleSceneName;
+
+    private bool randomBattle = false;
 
     private void Start()
     {
+
         // grabs all necessary references
         UpdateReferences();
         InitialiseEnemyLists();
+        InitialisePlayer();
     }
 
 
@@ -71,19 +95,35 @@ public class GameController : MonoBehaviour
     private void Overworld()
     {
         // if the scene is the correct scene
-        if (sceneFader.GetCurrentSceneName().Equals("Overworld"))
+        if (sceneFader.GetCurrentSceneName().Equals(overworldSceneName))
         {
-            // if a battle just occured
-            if(justBattled == true)
+            if (playerPosSet == false)
             {
+                playerGO.transform.position = playerLastPosition;
+                playerPosSet = true;
+            }
+                
+
+            // if a battle just occured
+            if (justBattled == true)
+            {
+                battleTriggered = false;
+
                 justBattled = false;
+
+                playerPosSet = false;
 
                 // updates all references needed for overworld scene
                 UpdateReferences();
 
                 // updates the enemy to reflect changes after battle
                 UpdateWorldEnemiesAfterBattle();
+
+                // updates the player to reflect changes after battle
+                UpdateWorldPlayerAfterBattle();  
             }
+
+            
         }
     }
 
@@ -94,7 +134,7 @@ public class GameController : MonoBehaviour
         //
 
         // if in the battle scene
-        if (sceneFader.GetCurrentSceneName().Equals("Battle"))
+        if (sceneFader.GetCurrentSceneName().Equals(battleSceneName))
         {
             if(battleEnemy == null)
             {
@@ -103,23 +143,30 @@ public class GameController : MonoBehaviour
 
                 // updates the properties of the battle enemy
                 UpdateBattleEnemy();
+
+                UpdateBattlePlayer();
             }
 
 
             // if the battle has finished
 
             // if the enemy is at 0 health
-            if (battleEnemy.GetCurrentHealth() <= 0)
+            if (battleController.GetBattleState() == BattleState.End)
             {
-                gameState = GameState.TransitionToOverworld;
+                if(battleController.GetPlayerWon())
+                {
+                    gameState = GameState.TransitionToOverworld;
+                }
+                else
+                {
+                    // player game over
+                    // restart overworld scene
+                    // destroy gamecontroller (and any other persistent objects???)
+                }
+                
             }
 
-            // if player health is lower than 0 go back to main menu
-            //
-            //  INSERT STATE CHANGE HERE!!!!
-            //
-
-            battleEnemy.SubtractHealth(2);
+            
         }
     }
 
@@ -129,20 +176,31 @@ public class GameController : MonoBehaviour
     private void TransitionToOverworld()
     {
         justBattled = true;
-        UpdateEnemyPropertiesAfterBattle();
+
+        if(randomBattle == false)
+        {
+            UpdateEnemyPropertiesAfterBattle();
+        }
+        else
+        {
+            randomBattle = false;
+        }
+        
+        UpdatePlayerPropertiesAfterBattle();
         battleEnemy = null;
         battleEnemyIndex = 0;
 
         gameState = GameState.Overworld;
-        sceneFader.FadeIntoScene("Overworld");
+        sceneFader.FadeIntoScene(overworldSceneName);
     }
 
 
     private void TransitionToBattle()
     {
-        
+        battleTriggered = true;
         gameState = GameState.Battle;
-        sceneFader.FadeIntoScene("Battle");
+        sceneFader.FadeIntoScene(battleSceneName);
+        playerLastPosition = playerGO.transform.position;
     }
 
 
@@ -159,20 +217,64 @@ public class GameController : MonoBehaviour
         if (sceneFader == null)
             sceneFader = GameObject.Find("SceneFader").GetComponent<SceneFader>();
 
+
+
         // only when the game state is in overworld and the scene matches the game state, grab the enemiesInHierarchy gameobject
         if (gameState == GameState.Overworld)
-            if (sceneFader.GetCurrentSceneName().Equals("Overworld"))
-                if (enemiesInHierarchy == null)
-                    enemiesInHierarchy = GameObject.FindWithTag("HierarchyEnemies");
+        {
+            if (sceneFader.GetCurrentSceneName().Equals(overworldSceneName))
+            {
+                if (enemiesInHierarchy == null) enemiesInHierarchy = GameObject.FindWithTag("HierarchyEnemies");
+
+
+                if (randomEnemiesInHierarchy == null)
+                {
+                    randomEnemiesInHierarchy = GameObject.FindWithTag("RandomEnemies");
+
+                    randomEnemiesGO = new GameObject[randomEnemiesInHierarchy.transform.childCount];
+                    randomEnemies = new Enemy[randomEnemiesInHierarchy.transform.childCount];
+
+                    for (int i = 0; i < randomEnemiesInHierarchy.transform.childCount; i++)
+                    {
+                        randomEnemiesGO[i] = randomEnemiesInHierarchy.transform.GetChild(i).gameObject;
+                        randomEnemies[i] = randomEnemiesGO[i].GetComponent<Enemy>();
+                    }
+                }
+
+                if (playerGO == null)
+                {
+                    playerGO = GameObject.FindWithTag("Player");
+                    playerWorld = playerGO.GetComponent<Player>();
+                }
+            }
+        }
+
+
 
         // only when the game state is in battle and the scene matches the game state, grab the battleEnemy gameobject and script
         if (gameState == GameState.Battle)
-            if (sceneFader.GetCurrentSceneName().Equals("Battle"))
+        {
+            if (sceneFader.GetCurrentSceneName().Equals(battleSceneName))
+            {
                 if (battleEnemy == null)
                 {
                     battleEnemyGO = GameObject.FindWithTag("BattleEnemy");
                     battleEnemy = battleEnemyGO.GetComponent<Enemy>();
                 }
+
+                if (playerBattle == null)
+                {
+                    playerBattleGO = GameObject.FindWithTag("BattlePlayer");
+                    playerBattle = playerBattleGO.GetComponent<Player>();
+                }
+
+                if(battleController == null)
+                {
+                    battleController = GameObject.FindWithTag("BattleController").GetComponent<BattleController>();
+                }
+
+            }
+        }
     }
 
 
@@ -187,8 +289,19 @@ public class GameController : MonoBehaviour
             enemiesWorld.Add(enemiesWorldGO[i].GetComponent<Enemy>());
 
             // set up the enemy properties list
-            enemiesProperties.Add(new EnemyProperties(i, enemiesWorld[i].GetEnemyType(), enemiesWorld[i].GetAlive(), enemiesWorld[i].GetLevel(), enemiesWorld[i].GetMaxHealth()));
+            enemiesProperties.Add(new EnemyProperties(enemyID, enemiesWorld[i].GetEnemyType(), enemiesWorld[i].GetMoves(), enemiesWorld[i].GetSprite(), enemiesWorld[i].GetName(), enemiesWorld[i].GetAlive(), enemiesWorld[i].GetLevel(), enemiesWorld[i].GetBaseStrength(), enemiesWorld[i].GetRateStrength(), enemiesWorld[i].GetBaseDexterity(), enemiesWorld[i].GetRateDexterity(), enemiesWorld[i].GetBaseIntelligence(), enemiesWorld[i].GetRateIntelligence()));
+
+            enemiesWorld[i].CopyEnemyProperties(enemiesProperties[i]);
+
+            enemyID++;
         }
+    }
+
+    
+    private void InitialisePlayer()
+    {
+        playerProperties = new PlayerProperties(playerWorld.GetPlayerType(), playerWorld.GetMoves(), playerWorld.GetSprite(), playerWorld.GetAlive(), playerWorld.GetLevel(), playerWorld.GetBaseStrength(), playerWorld.GetRateStrength(), playerWorld.GetBaseDexterity(), playerWorld.GetRateDexterity(), playerWorld.GetBaseIntelligence(), playerWorld.GetRateIntelligence());
+        playerWorld.CopyPlayerProperties(playerProperties);
     }
 
 
@@ -213,12 +326,45 @@ public class GameController : MonoBehaviour
         }
     }
 
+    public void TriggerRandomBattle()
+    {
+        battleTriggered = true;
+
+        randomBattle = true;
+
+        int randomEnemyIndex = Random.Range(0, randomEnemies.Length);
+
+        int level = playerWorld.GetLevel() - Random.Range(0, 3);
+
+        if (level < 0) level = 0;
+
+        Debug.Log(level);
+
+        randomEnemyPropeties = new EnemyProperties(enemyID, randomEnemies[randomEnemyIndex].GetEnemyType(), randomEnemies[randomEnemyIndex].GetMoves(), randomEnemies[randomEnemyIndex].GetSprite(), randomEnemies[randomEnemyIndex].GetName(), randomEnemies[randomEnemyIndex].GetAlive(), level, randomEnemies[randomEnemyIndex].GetBaseStrength(), randomEnemies[randomEnemyIndex].GetRateStrength(), randomEnemies[randomEnemyIndex].GetBaseDexterity(), randomEnemies[randomEnemyIndex].GetRateDexterity(), randomEnemies[randomEnemyIndex].GetBaseIntelligence(), randomEnemies[randomEnemyIndex].GetRateIntelligence());
+        Debug.Log(randomEnemyPropeties.ToString());
+
+        enemyID++;
+
+        gameState = GameState.Battle;
+        sceneFader.FadeIntoScene(battleSceneName);
+        playerLastPosition = playerGO.transform.position;
+    }
+
 
 
     private void UpdateBattleEnemy()
     {
+        Debug.Log(randomEnemyPropeties.ToString());
+
         // copies the properties of the enemy to the battle enemy script
-        battleEnemy.CopyEnemyProperties(enemiesProperties[battleEnemyIndex]);
+        if (randomBattle) battleEnemy.CopyEnemyProperties(randomEnemyPropeties);
+        else battleEnemy.CopyEnemyProperties(enemiesProperties[battleEnemyIndex]);
+
+    }
+
+    private void UpdateBattlePlayer()
+    {
+        playerBattle.CopyPlayerProperties(playerProperties);
     }
 
 
@@ -230,7 +376,12 @@ public class GameController : MonoBehaviour
         // changes can be made after a battle has finished and the overworld scene is about to be reloaded
         // this method should run only in the battle scene directly after the battle has finished
 
-        enemiesProperties[battleEnemyIndex].CopyEnemyData(battleEnemyIndex, battleEnemy);
+        enemiesProperties[battleEnemyIndex].CopyEnemyData(battleEnemy);
+    }
+
+    private void UpdatePlayerPropertiesAfterBattle()
+    {
+        playerProperties.CopyPlayerData(playerBattle);
     }
 
 
@@ -263,305 +414,20 @@ public class GameController : MonoBehaviour
         }
     }
 
+    private void UpdateWorldPlayerAfterBattle()
+    {
+        playerWorld.CopyPlayerProperties(playerProperties);
+    }
+
+
+
+
+    // GETTERS
+
+    public bool GetBattleTriggered()
+    {
+        return battleTriggered;
+    }
+
 
 }
-
-
-
-
-
-
-
-
-
-//public class GameController : MonoBehaviour
-//{
-
-    //private SceneFader sceneFader;
-
-    //public static GameState gameState = GameState.Overworld;
-
-    //private GameObject enemiesInHierarchy;
-    //private List<GameObject> enemiesGO = new List<GameObject>();
-    //private List<EnemyOverworld> enemiesOverworld = new List<EnemyOverworld>();
-    //private List<EnemyProperties> enemiesProperties = new List<EnemyProperties>();
-
-    //private BattleEnemyProperties inBattleEnemyProperties;
-    //private GameObject battleEnemy;
-    //private EnemyProperties battleEnemyProperties;
-    //private bool copyDone = false;
-    //private bool killBattleEnemy = false;
-
-    //// Use this for initialization
-    //void Start ()
-    //{
-    //    UpdateReferences();
-    //    UpdateEnemyLists();
-    //}
-	
-
-
-	//// Update is called once per frame
-	//void Update ()
- //   {
-	//	switch(gameState)
- //       {
- //           case GameState.Overworld:
- //               Overworld();
- //               break;
-
- //           case GameState.Battle:
- //               Battle();
- //               break;
-
- //           case GameState.TransitionToBattle:
- //               TransitionToBattle();
- //               break;
-
- //           case GameState.TransitionToOverworld:
- //               TransitionToOverworld();
- //               break;
-
- //           default:
- //               gameState = GameState.Overworld;
- //               break;
- //       }
-	//}
-
-
-
-
-
-
-    //private void Overworld()
-    //{
-    //    UpdateReferences();
-
-    //    if (sceneFader.GetCurrentSceneName().Equals("Overworld"))
-    //    {
-    //        if (killBattleEnemy == true)
-    //        {
-    //            killBattleEnemy = false;
-    //            copyDone = false;
-
-    //            UpdateEnemyLists(); 
-    //            enemiesOverworld[inBattleEnemyProperties.indexInList].Kill();
-    //        }
-    //    }
-    //}
-
-
-    //private void TransitionToBattle()
-    //{
-    //    gameState = GameState.Battle;
-    //    sceneFader.FadeIntoScene("Battle");
-    //}
-
-
-    //private void Battle()
-    //{
-    //    UpdateReferences();
-
-    //    // if in the battle scene
-    //    if (sceneFader.GetCurrentSceneName().Equals("Battle"))
-    //    {
-            
-    //        //
-    //        // STATE BEHAVIOUR
-    //        //
-
-    //        // copy the properties of the enemy to the battle enemy game object
-    //        UpdateBattleEnemyProperties();
-
-    //        // enable battle controller!!!!
-
-
-    //        battleEnemyProperties.SubtractHealth(10f * Time.deltaTime);
-
-    //        //Debug.Log(battleEnemyProperties.GetCurrentHealth());
-
-
-
-
-
-    //        //
-    //        // STATE CHANGES
-    //        //
-
-    //        // if the enemies health is below zero, transition back to overworld
-    //        if (battleEnemyProperties.GetCurrentHealth() <= 0f)
-    //        {
-    //            gameState = GameState.TransitionToOverworld;
-    //            killBattleEnemy = true;
-    //        }
-
-    //        // if the player health is below zero, transition back to main menu
-
-
-    //    }
-    //}
-
-
-
-
-    //private void TransitionToOverworld()
-    //{
-    //    gameState = GameState.Overworld;
-    //    sceneFader.FadeIntoScene("Overworld");
-    //}
-
-
-
-
-
-
-    //private void UpdateReferences()
-    //{
-    //    if (sceneFader == null)
-    //        sceneFader = GameObject.Find("SceneFader").GetComponent<SceneFader>();
-
-    //    if (gameState == GameState.Overworld)
-    //        if (sceneFader.GetCurrentSceneName().Equals("Overworld"))
-    //            if (enemiesInHierarchy == null)
-    //                enemiesInHierarchy = GameObject.FindWithTag("HierarchyEnemies");
-
-    //    if (gameState == GameState.Battle)
-    //        if(sceneFader.GetCurrentSceneName().Equals("Battle"))
-    //            if (battleEnemy == null)
-    //            {
-    //                battleEnemy = GameObject.FindWithTag("BattleEnemy");
-    //                battleEnemyProperties = battleEnemy.GetComponent<EnemyProperties>();
-    //            }
-    //}
-
-
-
-
-
-
-
-
-    //private void UpdateBattleEnemyProperties()
-    //{
-    //    if (copyDone == false)
-    //    {
-    //        copyDone = true;
-    //        battleEnemyProperties.SetAlive(inBattleEnemyProperties.alive);
-    //        battleEnemyProperties.SetLevel(inBattleEnemyProperties.level);
-    //        battleEnemyProperties.SetMaxHealth(inBattleEnemyProperties.maxHealth);
-    //        battleEnemyProperties.SetCurrentHealth();
-    //    } 
-    //}
-
-
-
-
-
-
-
-
-
-
-
-
-    //public void SetBattleEnemy(GameObject inBattleEnemey)
-    //{
-    //    // if the enemies go list contains the enemy to battle
-    //    if (enemiesGO.Contains(inBattleEnemey))
-    //    {
-    //        Debug.Log("IN LIST!");
-    //        // cycle through each enemy in the list
-    //        for (int i = 0; i < enemiesGO.Count; i++)
-    //        {
-    //            // find the enemy to battle
-    //            if (enemiesGO[i].Equals(inBattleEnemey))
-    //            {
-    //                Debug.Log("FOUND!");
-    //                inBattleEnemyProperties = new BattleEnemyProperties(i, enemiesProperties[i].GetAlive(), enemiesProperties[i].GetLevel(), enemiesProperties[i].GetMaxHealth());
-
-    //                // exit the loop
-    //                return;
-    //            }
-    //        }
-    //    }
-    //}
-
-
-
-    //private void UpdateEnemyLists()
-    //{
-    //    Debug.Log(enemiesInHierarchy.transform.childCount);
-
-    //    enemiesGO.Clear();
-    //    enemiesOverworld.Clear();
-    //    enemiesProperties.Clear();
-
-    //    for (int i = 0; i < enemiesInHierarchy.transform.childCount; i++)
-    //    {
-    //        enemiesGO.Add(enemiesInHierarchy.transform.GetChild(i).gameObject);
-    //        enemiesOverworld.Add(enemiesGO[i].transform.GetChild(0).GetComponent<EnemyOverworld>());
-    //        enemiesProperties.Add(enemiesGO[i].GetComponent<EnemyProperties>());
-    //    }
-    //}
-
-
-    ////public void RemoveEnemyFromList(GameObject inEnemyGO)
-    ////{
-    ////    enemiesGO.Remove(inEnemyGO);
-    ////    enemiesOverworld.Remove(inEnemyGO.transform.GetChild(0).GetComponent<EnemyOverworld>());
-    ////    enemiesProperties.Remove(inEnemyGO.GetComponent<EnemyProperties>());
-
-    ////    inEnemyGO.SetActive(false);
-
-    ////    PrintEnemiesGOList();
-
-    ////    UpdateEnemyLists();
-    ////}
-
-
-
-    ////public void RemoveEnemyFromList(int index)
-    ////{
-    ////    enemiesGO.RemoveAt(index);
-    ////    enemiesOverworld.RemoveAt(index);
-    ////    enemiesProperties.RemoveAt(index);
-
-    ////    UpdateEnemyLists();
-    ////}
-
-
-    //private void PrintEnemiesGOList()
-    //{
-    //    foreach(GameObject go in enemiesGO)
-    //    {
-    //        Debug.Log(go.name);
-    //    }
-    //}
-
-
-
-
-
-
-
-    //private class BattleEnemyProperties
-    //{
-    //    public int indexInList;
-
-    //    public bool alive;
-
-    //    public int level;
-
-    //    public float maxHealth;
-
-    //    public float currentHealth;
-
-    //    public BattleEnemyProperties(int inIndex, bool inAlive, int inLevel, float inMaxHealth)
-    //    {
-    //        indexInList = inIndex;
-    //        alive = inAlive;
-    //        level = inLevel;
-    //        maxHealth = inMaxHealth;
-    //        currentHealth = maxHealth;
-    //    }
-    //}
