@@ -291,6 +291,8 @@ public class GameController : MonoBehaviour
             // set up the enemy properties list
             enemiesProperties.Add(new EnemyProperties(enemyID, enemiesWorld[i].GetEnemyType(), enemiesWorld[i].GetMoves(), enemiesWorld[i].GetSprite(), enemiesWorld[i].GetName(), enemiesWorld[i].GetAlive(), enemiesWorld[i].GetLevel(), enemiesWorld[i].GetBaseStrength(), enemiesWorld[i].GetRateStrength(), enemiesWorld[i].GetBaseDexterity(), enemiesWorld[i].GetRateDexterity(), enemiesWorld[i].GetBaseIntelligence(), enemiesWorld[i].GetRateIntelligence()));
 
+            enemiesProperties.ToString();
+
             enemiesWorld[i].CopyEnemyProperties(enemiesProperties[i]);
 
             enemyID++;
@@ -354,8 +356,6 @@ public class GameController : MonoBehaviour
 
     private void UpdateBattleEnemy()
     {
-        Debug.Log(randomEnemyPropeties.ToString());
-
         // copies the properties of the enemy to the battle enemy script
         if (randomBattle) battleEnemy.CopyEnemyProperties(randomEnemyPropeties);
         else battleEnemy.CopyEnemyProperties(enemiesProperties[battleEnemyIndex]);
