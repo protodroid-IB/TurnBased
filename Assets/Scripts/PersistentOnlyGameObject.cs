@@ -9,17 +9,15 @@ public class PersistentOnlyGameObject : MonoBehaviour
     // boolean that checks if the gameobejct this script is attached to exists or not
     private bool gameControllerDoesExist = false;
 
+    SceneFader sceneFader;
+
     // Use this for initialization
     void Awake ()
     {
         CheckGameControllerExists();
 
-        SceneFader sceneFader = GameObject.FindWithTag("SceneFader").GetComponent<SceneFader>();
-
-        if(sceneFader.GetCurrentSceneName().Equals("MainMenu"))
-        {
-            Destroy(gameObject);
-        }
+        if(sceneFader == null)
+            sceneFader = GameObject.FindWithTag("SceneFader").GetComponent<SceneFader>();
     }
 
     private void CheckGameControllerExists()
@@ -39,6 +37,21 @@ public class PersistentOnlyGameObject : MonoBehaviour
         {
             // destroy the gameobject
             Destroy(gameObject);
+        }
+    }
+
+    private void Update()
+    {
+        if (sceneFader == null)
+        {
+            sceneFader = GameObject.FindWithTag("SceneFader").GetComponent<SceneFader>();
+        }
+        else
+        {
+            if (sceneFader.GetCurrentSceneName().Equals("MainMenu"))
+            {
+                Destroy(gameObject);
+            }
         }
     }
 }

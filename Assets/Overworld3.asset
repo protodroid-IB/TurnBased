@@ -123,8 +123,8 @@ MonoBehaviour:
         postExposure: 0
         temperature: 5
         tint: 23
-        hueShift: -19
-        saturation: 1.14
+        hueShift: 4
+        saturation: 1.174
         contrast: 1.05
       channelMixer:
         red: {x: 1, y: 0, z: 0}

@@ -47,13 +47,13 @@ public class GameController : MonoBehaviour
 
     private void Start()
     {
+        gameState = GameState.Overworld;
 
         // grabs all necessary references
         UpdateReferences();
         InitialiseEnemyLists();
         InitialisePlayer();
     }
-
 
 
     private void Update()
@@ -159,9 +159,7 @@ public class GameController : MonoBehaviour
                 }
                 else
                 {
-                    // player game over
-                    // restart overworld scene
-                    // destroy gamecontroller (and any other persistent objects???)
+                    sceneFader.FadeIntoScene("MainMenu");
                 }
                 
             }

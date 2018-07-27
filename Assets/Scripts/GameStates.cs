@@ -8,7 +8,7 @@ public enum BattleState {Begin, TurnSelect, PlayerTurn, EnemyTurn, ApplyMove, Ch
 
 public enum FighterType { Normal, Poison, Fire, Arcane};
 
-public enum Move { Punch, Mansplain, Flex, Squat, Spit, Eat, Flatulence, Feces, Burn, Warm, Fuel, Play, BuildWall, Tweet, Threaten, Flail };
+public enum Move { Punch, Mansplain, Flex, Squat, Spit, Eat, Flatulence, Feces, Burn, Warm, Fuel, Play, Cower, Chew, Pray, Cast};
 
 
 [System.Serializable]
